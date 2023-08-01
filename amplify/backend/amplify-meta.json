@@ -1,0 +1,58 @@
+{
+  "providers": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-devcon2023-dev-113029-authRole",
+      "UnauthRoleArn": "arn:aws:iam::997181605105:role/amplify-devcon2023-dev-113029-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::997181605105:role/amplify-devcon2023-dev-113029-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-devcon2023-dev-113029-deployment",
+      "UnauthRoleName": "amplify-devcon2023-dev-113029-unauthRole",
+      "StackName": "amplify-devcon2023-dev-113029",
+      "StackId": "arn:aws:cloudformation:us-east-1:997181605105:stack/amplify-devcon2023-dev-113029/6c393540-1c1a-11ee-bb6c-0e52fdec625b",
+      "AmplifyAppId": "d2unmbjj5enzga"
+    }
+  },
+  "auth": {
+    "devcon2023c85d3c25": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false,
+      "frontendAuthConfig": {
+        "socialProviders": [],
+        "usernameAttributes": [],
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyMinLength": 8,
+          "passwordPolicyCharacters": []
+        },
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      },
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-devcon2023-dev-113029-deployment/amplify-cfn-templates/auth/devcon2023c85d3c25-cloudformation-template.json",
+        "logicalId": "authdevcon2023c85d3c25"
+      },
+      "lastPushTimeStamp": "2023-07-26T17:08:45.667Z",
+      "output": {
+        "UserPoolId": "us-east-1_jq4BKoRdV",
+        "AppClientIDWeb": "p08k6tfkdt002ndr33i73al1b",
+        "AppClientID": "1dsvhn4v78gnvhad9kugks9715",
+        "HostedUIDomain": "devcon2023-dev",
+        "IdentityPoolId": "us-east-1:43fec74b-d3c6-4398-ae19-1050a70e7d8a",
+        "UserPoolArn": "arn:aws:cognito-idp:us-east-1:997181605105:userpool/us-east-1_jq4BKoRdV",
+        "IdentityPoolName": "devcon2023c85d3c25_identitypool_c85d3c25__dev",
+        "OAuthMetadata": "{\"AllowedOAuthFlows\":[\"code\"],\"AllowedOAuthScopes\":[\"phone\",\"email\",\"openid\",\"profile\",\"aws.cognito.signin.user.admin\"],\"CallbackURLs\":[\"http://localhost:3000/\"],\"LogoutURLs\":[\"http://localhost:3000/\"]}",
+        "UserPoolName": "devcon2023c85d3c25_userpool_c85d3c25"
+      },
+      "lastPushDirHash": "b6TeFOxEEIVI7leu2Is4dpiouVA="
+    }
+  }
+}
