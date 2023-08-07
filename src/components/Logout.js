@@ -4,19 +4,9 @@ import { Auth } from 'aws-amplify';
 
 export default class LogoutPage extends Component {
 
-    constructor(props) {
-        super(props);
-        Auth.signOut();
-    }
-
     render() {
         return <Card>
-            <Text>You have been logged out.</Text>
-            <Button
-                onClick={() => window.location = '/login' }
-            >
-                Back to Login
-            </Button>
+            <Button onClick={() => { Auth.signOut(); window.location = '/login'; }}>Sign Out</Button>
         </Card>
     }
 }

@@ -43,6 +43,7 @@ function LoginPage() {
       switch (event) {
         case 'signIn':
         case 'cognitoHostedUI':
+          console.debug(event, data);
           getUser().then(userData => setUser(userData));
           break;
         case 'signOut':
@@ -58,10 +59,10 @@ function LoginPage() {
     getUser().then(userData => setUser(userData));
   }, []);
 
-  function getUser() {
-    return Auth.currentAuthenticatedUser()
+  async function getUser() {
+    return await Auth.currentAuthenticatedUser()
       .then(userData => userData)
-      .catch(() => console.log('Not signed in'));
+      .catch((err) => { console.error(err); console.log('Not signed in'); });
   }
 
   return (

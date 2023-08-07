@@ -13,8 +13,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Suspense fallback={<>Loading...</>}><Chat /></Suspense>} />
       <Route path="/login" element={<Suspense fallback={<>Loading...</>}><LoginPage /></Suspense>} />
-      <Route path="/loggedin" element={<Suspense fallback={<>Loading...</>}>{<Navigate replace to="/" />}</Suspense>} />
-      <Route path="/logout" element={<Suspense fallback={<>Loading...</>}><LogoutPage /></Suspense>} />
+      <Route path="/loggedin" element={<Suspense fallback={<>Loading...</>}><Chat/></Suspense>} />
+      <Route path="/signout" element={<Suspense fallback={<>Loading...</>}>{<Navigate replace to="/" />}</Suspense>} />
     </Routes>
   );
 }

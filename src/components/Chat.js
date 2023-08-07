@@ -1,9 +1,11 @@
-import { Component, lazy } from 'react';
+import { Component } from 'react';
 import { Card, Button, View, Flex, Badge, TextField, Heading, Text, Placeholder } from '@aws-amplify/ui-react';
 import { PubSub, Hub, Amplify, Auth } from 'aws-amplify';
 import { AWSIoTProvider } from '@aws-amplify/pubsub';
 import awsExports from '../aws-exports';
 import moment from 'moment';
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
+import { IoTClient, AttachPolicyCommand } from '@aws-sdk/client-iot';
 
 export default class Chat extends Component {
 
@@ -43,6 +45,8 @@ export default class Chat extends Component {
             <Button variation="primary"
               onClick={(event) => { PubSub.publish('devcon/chat', {message: this.state.message_text, from: this.state.user, time: moment().toISOString()}); this.setState({...this.state, ...{message_text: ''}}) }}
             >Post Message</Button>
+
+            <Button onClick={() => Auth.signOut()}>Sign Out</Button>
           </Flex>
         </Card>
 
@@ -59,17 +63,50 @@ export default class Chat extends Component {
             })}
           </Flex>
         </Card>
+
       </Flex>
     </View>
   }
 
-  componentDidMount() {
+  async componentDidMount() {
 
     Amplify.configure(awsExports);
 
-    Auth.currentAuthenticatedUser()
-    .then(userData => { this.setState({...this.state, ...{user: userData.attributes.email}}); })
-    .catch(() => { window.location = '/login'; });
+    await Auth.currentAuthenticatedUser().then(async userData => {
+
+        let cognitoId = null;
+
+        await Auth.currentCredentials().then(async userCreds => {
+          cognitoId = userCreds.identityId;
+        });
+
+        await Auth.currentSession().then(async session => {
+
+          const accessToken = session.getIdToken().getJwtToken();
+
+          const iot = new IoTClient({
+            region: 'us-east-1',
+            credentials: fromCognitoIdentityPool({
+              clientConfig: { region: awsExports.aws_cognito_region },
+              identityPoolId: awsExports.aws_cognito_identity_pool_id,
+              logins: {
+                [`cognito-idp.${awsExports.aws_cognito_region}.amazonaws.com/${userData.pool.userPoolId}`]: accessToken
+              }
+            })
+          });
+
+          const input = { // AttachPolicyRequest
+            policyName: 'PubSubAnyTopic',
+            target: cognitoId, // required
+          };
+
+          const command = new AttachPolicyCommand(input);
+          const response = await iot.send(command);
+          console.debug('AttachPolicly response: ', response);
+        });
+
+        this.setState({...this.state, ...{user: userData.attributes.email}}); 
+    }).catch((err) => { console.error(err); window.location = '/login'; });
 
     Amplify.addPluggable(
       new AWSIoTProvider({
