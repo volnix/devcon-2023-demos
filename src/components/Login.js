@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Amplify, Auth, Hub } from 'aws-amplify';
-import { Card, Button } from '@aws-amplify/ui-react';
+import { Card, Button, View, useTheme, Text, Image } from '@aws-amplify/ui-react';
 import awsConfig from '../aws-exports';
 
 const isLocalhost = Boolean(
@@ -13,30 +13,16 @@ const isLocalhost = Boolean(
     )
 );
 
-// Assuming you have two redirect URIs, and the first is for localhost and second is for production
-const [
-  localRedirectSignIn,
-  productionRedirectSignIn,
-] = awsConfig.oauth.redirectSignIn.split(',');
-
-const [
-  localRedirectSignOut,
-  productionRedirectSignOut,
-] = awsConfig.oauth.redirectSignOut.split(',');
-
-const updatedAwsConfig = {
-  ...awsConfig,
-  oauth: {
-    ...awsConfig.oauth,
-    redirectSignIn: isLocalhost ? localRedirectSignIn : productionRedirectSignIn,
-    redirectSignOut: isLocalhost ? localRedirectSignOut : productionRedirectSignOut,
-  }
+if (isLocalhost) {
+  awsConfig.oauth.redirectSignIn = 'http://localhost:3000/loggedin';
+  awsConfig.oauth.redirectSignOut = 'http://localhost:3000/signout';
 }
 
-Amplify.configure(updatedAwsConfig);
+Amplify.configure(awsConfig);
 
 function LoginPage() {
   const [user, setUser] = useState(null);
+  const { tokens } = useTheme();
 
   useEffect(() => {
     Hub.listen('auth', ({ payload: { event, data } }) => {
@@ -66,14 +52,20 @@ function LoginPage() {
   }
 
   return (
-    <Card>
-      <p>User: {user ? JSON.stringify(user.attributes) : 'None'}</p>
-      {user ? (
-        <Button onClick={() => Auth.signOut()}>Sign Out</Button>
-      ) : (
-        <Button onClick={() => Auth.federatedSignIn()}>Federated Sign In</Button>
-      )}
-    </Card>
+    <View
+      backgroundColor={tokens.colors.background.secondary}
+      padding={tokens.space.medium}
+    >
+      <Card style={{textAlign: 'center'}}>
+        <Text variation="primary" padding={tokens.space.large}>{user ? `Logged in as ${user.attributes.email}` : 'Currently logged out'}</Text>
+        {user ? (
+          <Button onClick={() => Auth.signOut()}>Logut</Button>
+        ) : (
+          <Image src="./lwa_button.png" onClick={() => Auth.federatedSignIn()} className='lwa_button'/>
+          // <Button onClick={() => Auth.federatedSignIn()}>Federated Sign In</Button>
+        )}
+      </Card>
+    </View>
   );
 }
 

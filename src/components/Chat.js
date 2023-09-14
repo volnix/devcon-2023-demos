@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { Card, Button, View, Flex, Badge, TextField, Heading, Text, Placeholder } from '@aws-amplify/ui-react';
+import { Card, Button, View, Flex, Badge, TextAreaField, Heading, Text, Placeholder } from '@aws-amplify/ui-react';
 import { PubSub, Hub, Amplify, Auth } from 'aws-amplify';
 import { AWSIoTProvider } from '@aws-amplify/pubsub';
 import awsExports from '../aws-exports';
@@ -10,7 +10,7 @@ import { IoTClient, AttachPolicyCommand } from '@aws-sdk/client-iot';
 export default class Chat extends Component {
 
   state = {
-    user: undefined, messages: [], message_text: ''
+    user: undefined, messages: [], message_text: '', network_requests: [], error: ''
   };
 
   render() {
@@ -19,8 +19,16 @@ export default class Chat extends Component {
     }
 
     return <View>
-      <Flex direction="row" alignItems="flex-start">
-        <Card>
+      <Flex 
+        direction="row"
+        justifyContent="flex-start"
+        alignItems="stretch"
+        alignContent="flex-start"
+        wrap="nowrap"
+        gap="1rem"
+        padding="2rem"
+        >
+        <Card style={{ borderRadius: '5px', width: '30rem' }} padding='1rem'>
           <Flex
             direction="column"
             alignItems="flex-start"
@@ -35,21 +43,26 @@ export default class Chat extends Component {
               Chat
             </Heading>
 
-            <TextField
+            <TextAreaField
               placeholder="Enter message..."
               label="Text of message you want to send"
               labelHidden={true}
+              rows={5}
               onChange={(event) => { this.setState({...this.state, ...{message_text: event.target.value}})}}
               value={this.state.message_text}
+              style={{ width: '20rem' }}
+              errorMessage={this.state.error}
+              hasError={this.state.error}
             />
             <Button variation="primary"
-              onClick={(event) => { PubSub.publish('devcon/chat', {message: this.state.message_text, from: this.state.user, time: moment().toISOString()}); this.setState({...this.state, ...{message_text: ''}}) }}
+              onClick={(event) => { this.publishMessage(this.state.message_text) }}
             >Post Message</Button>
 
             <Button onClick={() => Auth.signOut()}>Sign Out</Button>
           </Flex>
         </Card>
 
+        {Object.keys(this.state.messages).length > 0 &&
         <Card>
           <Flex
             direction="column"
@@ -57,18 +70,44 @@ export default class Chat extends Component {
           >
             {Object.keys(this.state.messages).map(index => {
               let message = this.state.messages[index];
-              return <Text key={index}>
-                <Badge variation='info'>{message.from}</Badge> <i>{moment(message.time).format('h:mm:ss')}:</i> "{message.message}"
+              return <Text key={'message-' + index}>
+                <Badge variation='info'>{message.sender}</Badge> <i>{moment(message.timestamp).format('h:mm:ss')}:</i> "{message.message}"
               </Text>
             })}
           </Flex>
         </Card>
+        }
 
       </Flex>
     </View>
   }
 
+  publishMessage(message) {
+    if (! message) {
+      this.setState({...this.state, ...{error: 'Enter a non-empty message'}});
+      return;
+    }
+
+    PubSub.publish('devcon/chat', {message: message, sender: this.state.user, timestamp: moment().toISOString()});
+    this.setState({...this.state, ...{message_text: '', error: ''}});
+  }
+
   async componentDidMount() {
+
+    const isLocalhost = Boolean(
+      window.location.hostname === 'localhost' ||
+        // [::1] is the IPv6 localhost address.
+        window.location.hostname === '[::1]' ||
+        // 127.0.0.1/8 is considered localhost for IPv4.
+        window.location.hostname.match(
+          /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
+        )
+    );
+    
+    if (isLocalhost) {
+      awsExports.oauth.redirectSignIn = 'http://localhost:3000/loggedin';
+      awsExports.oauth.redirectSignOut = 'http://localhost:3000/signout';
+    }
 
     Amplify.configure(awsExports);
 
@@ -116,16 +155,12 @@ export default class Chat extends Component {
       })
     );
 
-    // Hub.listen("pubsub", (data) => {
-    //   console.debug(data);
-    // });
-
     PubSub.subscribe('devcon/chat').subscribe({
       next: message => {
         console.debug(message); 
         let messages = this.state.messages;
         let payload = message.value;
-        messages[moment(payload.time).valueOf()] = payload; // de-dupte
+        messages[moment(payload.timestamp).valueOf()] = payload; // de-dupte
         this.setState({...this.state, ...{messages: messages}}); 
       },
       error: error => { console.error('Error!', error); },
